@@ -9,7 +9,7 @@ mkdir -p "$PID_DIR"
 
 source "$ROOT/.venv/bin/activate"
 
-python -c "from integration.preflight import check; check()"
+python3.11 -c "from integration.preflight import check; check()"
 
 start_service() {
   local name="$1"
@@ -37,7 +37,7 @@ start_service() {
 
 is_enabled() {
   local path="$1"
-  python - <<EOF
+  python3.11 - <<EOF
 import yaml
 cfg = yaml.safe_load(open("configs/system.yaml"))
 cur = cfg
@@ -54,15 +54,15 @@ if [[ "$(is_enabled run_server.enabled)" == "true" ]]; then
 fi
 
 if [[ "$(is_enabled retrieval.broker.enabled)" == "true" ]]; then
-  start_service "retrieval_broker" "python -m integration.retrieval_broker.service" "http://127.0.0.1:8010/health"
+  start_service "retrieval_broker" "python3.11 -m integration.retrieval_broker.service" "http://127.0.0.1:8010/health"
 fi
 
 if [[ "$(is_enabled workers.hardened.enabled)" == "true" ]]; then
-  start_service "worker_hardened" "python -m integration.worker_hardened.service" "http://127.0.0.1:8020/health"
+  start_service "worker_hardened" "python3.11 -m integration.worker_hardened.service" "http://127.0.0.1:8020/health"
 fi
 
 if [[ "$(is_enabled workers.aider.enabled)" == "true" ]]; then
-  start_service "worker_aider" "python -m integration.worker_aider.service" "http://127.0.0.1:8030/health"
+  start_service "worker_aider" "python3.11 -m integration.worker_aider.service" "http://127.0.0.1:8030/health"
 fi
 
 echo "RUN_LOCAL_OK"

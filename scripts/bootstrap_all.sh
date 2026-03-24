@@ -5,11 +5,11 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 
 echo "[1/5] Create virtual environment"
-python3 -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate
 
 echo "[2/5] Upgrade pip"
-python -m pip install --upgrade pip
+python3.11 -m pip install --upgrade pip
 
 echo "[3/5] Install packages"
 pip install -r requirements.txt
@@ -18,7 +18,7 @@ pip install -e third_party/code-agent-runtime
 pip install -e third_party/cocoindex-code
 
 echo "[4/5] Verify runtime imports"
-python - <<'PY'
+python3.11 - <<'PY'
 from integration.pipeline import run_pipeline
 from integration.patch_executor import apply_plan
 from integration.llm_planner import create_plan

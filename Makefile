@@ -16,4 +16,4 @@ clean:
 	bash scripts/clean_workspace.sh
 
 harness:
-	python3 scripts/tool_harness.py
+	python3.11 scripts/tool_harness.py
