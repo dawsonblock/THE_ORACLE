@@ -1,0 +1,2 @@
+[console_scripts]
+oracle-run-server = scripts.serve_coding_runs:main

@@ -1,0 +1,12 @@
+{
+  "run_id": "8e44a039-aa27-4888-abf0-7dcb020a6078",
+  "task": "fix first_token so empty list returns None",
+  "repo_path": "/private/var/folders/xt/jh84t2kj6hl26tk5qx3m_28h0000gn/T/pytest-of-dawsonblock/pytest-5/test_full_approval_promotion_f0/repo",
+  "timestamp": "2026-03-24T08:28:30.100248+00:00",
+  "status": "awaiting_approval",
+  "attempts": 1,
+  "reason": null,
+  "files_changed": [
+    "parser.py"
+  ]
+}

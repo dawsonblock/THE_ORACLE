@@ -5,3 +5,10 @@ pytest
 gitpython
 requests
 pyyaml
+redis
+rq
+httpx
+-e .
+-e third_party/aider
+-e third_party/code-agent-runtime
+-e third_party/cocoindex-code

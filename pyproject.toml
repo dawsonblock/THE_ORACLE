@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "oracle-system"
 version = "0.1.0"
 description = "Oracle Build v6 — supervised coding scaffold"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
   "fastapi",
   "uvicorn",
@@ -15,13 +15,15 @@ dependencies = [
   "gitpython",
   "requests",
   "pyyaml",
+  "redis",
+  "rq",
 ]
 
 [project.scripts]
 oracle-run-server = "scripts.serve_coding_runs:main"
 
 [tool.setuptools.packages.find]
-include = ["integration*", "scripts*"]
+include = ["integration*", "scripts*", "runtime*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
