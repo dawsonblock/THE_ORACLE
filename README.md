@@ -26,6 +26,7 @@ A supervised coding scaffold that plans, executes, and validates code modificati
 | 🧪 **Test Suite** | ✅ 177 Passed | Unit, E2E, and integration tests (zero warnings) |
 | 🔐 **Approval Flow** | ✅ Operational | Approve/reject with receipts |
 | 🚪 **Unified Gate** | ✅ Operational | Single `/decide` endpoint for approve/reject |
+| 🖥️ **Web UI** | ✅ Operational | Animated AI face with thinking states |
 | 🌐 **Portable Startup** | ✅ Works on any system with Python 3.11+ |
 
 ---
@@ -153,6 +154,43 @@ bash scripts/stop_all.sh
 
 ---
 
+## 🖥️ Web UI
+
+THE ORACLE includes a user-friendly web interface with an animated AI face that shows what it's thinking.
+
+### Launch the UI
+
+```bash
+bash scripts/run_ui.sh
+```
+
+This starts both the API server (port 8000) and the web UI (port 8080).
+
+### Features
+
+- **🎭 Animated AI Face**: Eye tracking, blinking, and expression changes based on state
+- **💭 Thinking States**: Visual feedback when planning, working, or awaiting approval
+- **⚙️ Options Panel**: Configure auto-retry, approval requirements, tests, verbose output
+- **📋 Results Panel**: View summary, diff, and logs in tabbed interface
+- **✅ Approval Actions**: Approve or reject changes directly in the UI
+- **🕐 Recent Runs**: View and reload previous runs
+
+### API Key Configuration
+
+Add your API keys to `.env`:
+
+```bash
+# Kimi API Key
+KIMI_API_KEY=sk-kimi-...
+
+# OpenAI (optional fallback)
+OPENAI_API_KEY=sk-...
+```
+
+Or configure via the Settings button (⚙️) in the UI.
+
+---
+
 ## ✅ What's Proven
 
 ### Core Pipeline
@@ -236,6 +274,7 @@ THE_ORACLE/
 ├── scripts/           # Bootstrap, run, stop scripts (portable)
 │   ├── bootstrap_all.sh
 │   ├── run_local.sh
+│   ├── run_ui.sh      # Launch web UI + API
 │   ├── stop_all.sh
 │   └── release_gate.sh
 ├── integration/       # Core pipeline modules
@@ -247,6 +286,11 @@ THE_ORACLE/
 │   └── runtime/                 # Artifact storage
 │       ├── runs/                # Run artifacts (JSON)
 │       └── receipts/            # Approval receipts (JSON)
+├── ui/                # Web interface
+│   ├── index.html     # Main UI
+│   ├── styles.css     # Styling & animations
+│   ├── app.js         # UI logic
+│   └── server.py      # UI server
 ├── tests/             # Unit, integration, E2E tests
 ├── configs/           # System configuration
 │   └── system.yaml    # Service enable/disable flags
