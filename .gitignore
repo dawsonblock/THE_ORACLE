@@ -17,3 +17,9 @@ third_party/**/*.egg-info/
 third_party/**/*.dist-info/
 third_party/**/__pycache__/
 requirements.lock.txt
+
+# Runtime artifacts (test outputs)
+runtime/runs/*.json
+runtime/receipts/*.json
+runtime/logs/*.log
+runtime/pids/*.pid
