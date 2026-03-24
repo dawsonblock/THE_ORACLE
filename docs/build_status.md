@@ -89,23 +89,30 @@ bash scripts/stop_all.sh
 
 ## Recent Changes
 
-### Latest: All P0 Operational Gaps Closed
+### Latest: Runtime Import Fix - VERIFIED
 
-**1. Import Consistency (Fixed)**
-- `runtime.approval_store` now imports correctly under pytest
-- Requires editable install: `pip install -e .` (handled by bootstrap)
-- All 169 tests pass with `-W error` (zero warnings)
+**Critical Fix: Restructured runtime/ as integration/runtime/**
+- Moved `runtime/` to `integration/runtime/` for reliable pytest discovery
+- Updated all imports: `from runtime.X` → `from integration.runtime.X`
+- Removed PYTHONPATH dependency from service startup
+- All 169 tests now pass in fresh environment with `-W error`
 
-**2. Control Plane Proof (Verified)**
-- Approval e2e tests assert real state transitions: `awaiting_approval` → `applied`
-- Receipt artifacts verified with correct fields
-- No-diff blocking verified
-- Tests: `test_approval_promotion_flow.py` (4 tests), `test_no_diff_no_approval.py` (4 tests)
+**Verified in Fresh Environment:**
+```bash
+rm -rf .venv
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+pytest tests/e2e/test_approval_promotion_flow.py -v  # 4 passed
+pytest tests/e2e/test_no_diff_no_approval.py -v      # 4 passed
+pytest tests/integration -q                           # 150 passed
+pytest tests/unit -q                                  # 10 passed
+# Total: 169 passed, zero warnings
+```
 
-**3. Local Runtime Hardening (Fixed)**
-- `run_local.sh` now uses `-c` import pattern for reliable startup
-- Works twice in a row without manual cleanup
-- Health and ready checks pass consistently
+**Previous: All P0 Operational Gaps Closed**
+- Control plane proof verified
+- Local runtime hardening complete
 
 ### Previous: Portable Startup (Phase 1 Complete)
 - Replaced hardcoded `python3.11` with `PYTHON_BIN` environment variable

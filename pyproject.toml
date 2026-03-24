@@ -23,8 +23,7 @@ dependencies = [
 oracle-run-server = "scripts.serve_coding_runs:main"
 
 [tool.setuptools.packages.find]
-include = ["integration*", "scripts*", "runtime*"]
+include = ["integration*", "scripts*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-asyncio_default_fixture_loop_scope = "function"

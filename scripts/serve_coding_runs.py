@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from integration.pipeline import run_pipeline
-from runtime.approval_store import (
+from integration.runtime.approval_store import (
     load_run,
     save_run,
     approve_run,
