@@ -41,18 +41,24 @@ def test_requirements_use_local_editable_installs() -> None:
 
 def test_bootstrap_installs_editables_without_pythonpath_hacks() -> None:
     bootstrap = (ROOT / "scripts" / "bootstrap_all.sh").read_text(encoding="utf-8")
+    requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8")
 
-    # Accept either python3 or python3.11 for venv creation
-    assert ("python3 -m venv .venv" in bootstrap or "python3.11 -m venv .venv" in bootstrap)
+    # Portable Python detection
+    assert "PYTHON_BIN=" in bootstrap
+    assert "command -v" in bootstrap
+    assert "sys.version_info < (3, 11)" in bootstrap
+    # Venv creation uses the detected Python
+    assert '"$PYTHON_BIN" -m venv' in bootstrap
     assert "source .venv/bin/activate" in bootstrap
     assert "pip install --upgrade pip" in bootstrap
     assert "pip install -r requirements.txt" in bootstrap
-    assert "pip install -e third_party/aider" in bootstrap
+    # Editable installs can be in requirements.txt or explicit in bootstrap
+    assert ("pip install -e third_party/aider" in bootstrap or "-e third_party/aider" in requirements)
     assert "pip install -e ." not in bootstrap
-    assert "pip install -e third_party/code-agent-runtime" in bootstrap
-    assert "pip install -e third_party/cocoindex-code" in bootstrap
-    # Accept either python or python3.11 for import check
-    assert ("python - <<'PY'" in bootstrap or "python3.11 - <<'PY'" in bootstrap)
+    assert ("pip install -e third_party/code-agent-runtime" in bootstrap or "-e third_party/code-agent-runtime" in requirements)
+    assert ("pip install -e third_party/cocoindex-code" in bootstrap or "-e third_party/cocoindex-code" in requirements)
+    # Import check uses venv Python
+    assert "python - <<'PY'" in bootstrap
     assert "Import checks passed" in bootstrap
     assert "PYTHONPATH" not in bootstrap
     assert "requirements_bootstrap.txt" not in bootstrap

@@ -4,12 +4,20 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 
+# Use venv Python explicitly
+VENV_PYTHON="$ROOT/.venv/bin/python"
+
+if [[ ! -x "$VENV_PYTHON" ]]; then
+  echo "Error: Virtual environment not found at .venv"
+  echo "Run: bash scripts/bootstrap_all.sh"
+  exit 1
+fi
+
 PID_DIR="$ROOT/runtime/pids"
 mkdir -p "$PID_DIR"
 
-source "$ROOT/.venv/bin/activate"
-
-python3.11 -c "from integration.preflight import check; check()"
+echo "[preflight] Checking runtime..."
+"$VENV_PYTHON" -c "from integration.preflight import check; check()"
 
 start_service() {
   local name="$1"
@@ -37,7 +45,7 @@ start_service() {
 
 is_enabled() {
   local path="$1"
-  python3.11 - <<EOF
+  "$VENV_PYTHON" - <<EOF
 import yaml
 cfg = yaml.safe_load(open("configs/system.yaml"))
 cur = cfg
@@ -50,19 +58,19 @@ EOF
 mkdir -p runtime/runs runtime/receipts runtime/logs
 
 if [[ "$(is_enabled run_server.enabled)" == "true" ]]; then
-  start_service "run_server" "oracle-run-server" "http://127.0.0.1:8000/health"
+  start_service "run_server" "$VENV_PYTHON -m scripts.serve_coding_runs" "http://127.0.0.1:8000/health"
 fi
 
 if [[ "$(is_enabled retrieval.broker.enabled)" == "true" ]]; then
-  start_service "retrieval_broker" "python3.11 -m integration.retrieval_broker.service" "http://127.0.0.1:8010/health"
+  start_service "retrieval_broker" "$VENV_PYTHON -m integration.retrieval_broker.service" "http://127.0.0.1:8010/health"
 fi
 
 if [[ "$(is_enabled workers.hardened.enabled)" == "true" ]]; then
-  start_service "worker_hardened" "python3.11 -m integration.worker_hardened.service" "http://127.0.0.1:8020/health"
+  start_service "worker_hardened" "$VENV_PYTHON -m integration.worker_hardened.service" "http://127.0.0.1:8020/health"
 fi
 
 if [[ "$(is_enabled workers.aider.enabled)" == "true" ]]; then
-  start_service "worker_aider" "python3.11 -m integration.worker_aider.service" "http://127.0.0.1:8030/health"
+  start_service "worker_aider" "$VENV_PYTHON -m integration.worker_aider.service" "http://127.0.0.1:8030/health"
 fi
 
 echo "RUN_LOCAL_OK"

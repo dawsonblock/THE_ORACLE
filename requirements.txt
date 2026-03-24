@@ -8,6 +8,7 @@ pyyaml
 redis
 rq
 httpx
+jsonschema
 -e .
 -e third_party/aider
 -e third_party/code-agent-runtime
