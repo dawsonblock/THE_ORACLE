@@ -25,3 +25,4 @@ runtime/logs/*.log
 runtime/pids/*.pid
 integration/runtime/logs/*.log
 integration/runtime/pids/*.pid
+.env

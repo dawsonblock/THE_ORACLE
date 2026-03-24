@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔮 THE ORACLE - AI Code Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🔮</span>
+                <h1>THE ORACLE</h1>
+            </div>
+            <div class="status-bar">
+                <span class="status-indicator" id="serverStatus">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting...</span>
+                </span>
+                <button class="btn-icon" id="settingsBtn" title="Settings">⚙️</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- AI Face Section -->
+            <section class="ai-face-section">
+                <div class="ai-avatar-container">
+                    <div class="ai-avatar" id="aiAvatar">
+                        <!-- Animated Face -->
+                        <div class="face">
+                            <div class="eyes">
+                                <div class="eye left">
+                                    <div class="pupil"></div>
+                                    <div class="eyelid"></div>
+                                </div>
+                                <div class="eye right">
+                                    <div class="pupil"></div>
+                                    <div class="eyelid"></div>
+                                </div>
+                            </div>
+                            <div class="mouth-container">
+                                <div class="mouth" id="mouth"></div>
+                            </div>
+                            <div class="thought-bubbles" id="thoughtBubbles">
+                                <div class="bubble bubble-1">💭</div>
+                                <div class="bubble bubble-2">✨</div>
+                                <div class="bubble bubble-3">🔧</div>
+                            </div>
+                        </div>
+                        <!-- Glow Effect -->
+                        <div class="glow-ring"></div>
+                        <div class="glow-ring glow-ring-2"></div>
+                    </div>
+                    
+                    <!-- AI State Display -->
+                    <div class="ai-state">
+                        <h2 class="state-title" id="stateTitle">Ready</h2>
+                        <p class="state-description" id="stateDescription">I'm ready to help you with code modifications</p>
+                        <div class="thinking-animation" id="thinkingAnimation">
+                            <div class="thinking-dot"></div>
+                            <div class="thinking-dot"></div>
+                            <div class="thinking-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Task Input Section -->
+            <section class="task-section">
+                <div class="input-group">
+                    <label for="taskInput">What would you like me to do?</label>
+                    <textarea 
+                        id="taskInput" 
+                        placeholder="e.g., Fix the first_token function to handle empty lists..."
+                        rows="3"
+                    ></textarea>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group flex-1">
+                        <label for="repoPath">Repository Path</label>
+                        <input type="text" id="repoPath" placeholder="/path/to/your/repo">
+                    </div>
+                    <div class="input-group">
+                        <label for="modelSelect">Model</label>
+                        <select id="modelSelect">
+                            <option value="kimi">Kimi (Default)</option>
+                            <option value="openai">OpenAI GPT-4</option>
+                            <option value="fallback">Fallback (No API)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="runBtn">
+                        <span class="btn-icon">▶️</span>
+                        <span>Run Task</span>
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn">
+                        <span>Clear</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Options Panel -->
+            <section class="options-section">
+                <div class="section-header">
+                    <h3>⚙️ Options</h3>
+                    <button class="btn-toggle" id="toggleOptions">▼</button>
+                </div>
+                <div class="options-content" id="optionsContent">
+                    <div class="options-grid">
+                        <div class="option-card">
+                            <div class="option-header">
+                                <span class="option-icon">🔄</span>
+                                <span class="option-title">Auto-Retry</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="autoRetry" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <p class="option-desc">Automatically retry failed attempts with corrected plans</p>
+                        </div>
+
+                        <div class="option-card">
+                            <div class="option-header">
+                                <span class="option-icon">✅</span>
+                                <span class="option-title">Require Approval</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="requireApproval" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <p class="option-desc">Wait for manual approval before applying changes</p>
+                        </div>
+
+                        <div class="option-card">
+                            <div class="option-header">
+                                <span class="option-icon">🧪</span>
+                                <span class="option-title">Run Tests</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="runTests" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <p class="option-desc">Execute pytest after applying changes</p>
+                        </div>
+
+                        <div class="option-card">
+                            <div class="option-header">
+                                <span class="option-icon">📊</span>
+                                <span class="option-title">Verbose Output</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="verboseOutput">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <p class="option-desc">Show detailed logs and reasoning</p>
+                        </div>
+
+                        <div class="option-card">
+                            <div class="option-header">
+                                <span class="option-icon">🔒</span>
+                                <span class="option-title">Safe Mode</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="safeMode" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <p class="option-desc">Extra safety checks before file modifications</p>
+                        </div>
+
+                        <div class="option-card">
+                            <div class="option-header">
+                                <span class="option-icon">💾</span>
+                                <span class="option-title">Save Artifacts</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="saveArtifacts" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <p class="option-desc">Save run artifacts and receipts to disk</p>
+                        </div>
+                    </div>
+
+                    <div class="advanced-options">
+                        <h4>Advanced</h4>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="maxRetries">Max Retries</label>
+                                <input type="number" id="maxRetries" value="3" min="1" max="10">
+                            </div>
+                            <div class="input-group">
+                                <label for="timeout">Timeout (seconds)</label>
+                                <input type="number" id="timeout" value="300" min="30" max="600">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="section-header">
+                    <h3>📋 Results</h3>
+                    <span class="run-id" id="runId"></span>
+                </div>
+                
+                <div class="results-content">
+                    <div class="status-badge" id="resultStatus">Pending</div>
+                    
+                    <div class="result-tabs">
+                        <button class="tab-btn active" data-tab="summary">Summary</button>
+                        <button class="tab-btn" data-tab="diff">Diff</button>
+                        <button class="tab-btn" data-tab="logs">Logs</button>
+                    </div>
+
+                    <div class="tab-content active" id="summaryTab">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Task</span>
+                                <span class="info-value" id="resultTask">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Repository</span>
+                                <span class="info-value" id="resultRepo">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Files Changed</span>
+                                <span class="info-value" id="resultFiles">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Attempts</span>
+                                <span class="info-value" id="resultAttempts">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="diffTab">
+                        <pre class="code-block" id="diffContent">No diff available</pre>
+                    </div>
+
+                    <div class="tab-content" id="logsTab">
+                        <pre class="code-block" id="logsContent">No logs available</pre>
+                    </div>
+                </div>
+
+                <!-- Approval Actions -->
+                <div class="approval-actions" id="approvalActions" style="display: none;">
+                    <p class="approval-text">Changes are ready for your review. Approve to apply?</p>
+                    <div class="approval-buttons">
+                        <button class="btn btn-success" id="approveBtn">
+                            <span>✅ Approve</span>
+                        </button>
+                        <button class="btn btn-danger" id="rejectBtn">
+                            <span>❌ Reject</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Runs -->
+            <section class="recent-runs-section">
+                <div class="section-header">
+                    <h3>🕐 Recent Runs</h3>
+                    <button class="btn btn-small" id="refreshRuns">🔄 Refresh</button>
+                </div>
+                <div class="runs-list" id="runsList">
+                    <p class="empty-state">No recent runs</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>THE ORACLE v0.1.0 • 177 Tests Passing • <a href="#" id="showDocs">Documentation</a></p>
+        </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Settings</h3>
+                <button class="btn-close" id="closeSettings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="apiEndpoint">API Endpoint</label>
+                    <input type="text" id="apiEndpoint" value="http://localhost:8000">
+                </div>
+                <div class="input-group">
+                    <label for="kimiKey">Kimi API Key</label>
+                    <input type="password" id="kimiKey" value="••••••••••••••••">
+                </div>
+                <div class="input-group">
+                    <label for="openaiKey">OpenAI API Key (Optional)</label>
+                    <input type="password" id="openaiKey" placeholder="sk-...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelSettings">Cancel</button>
+                <button class="btn btn-primary" id="saveSettings">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

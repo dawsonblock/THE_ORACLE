@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from integration.pipeline import run_pipeline
 from integration.runtime.approval_store import (
@@ -19,6 +20,15 @@ from datetime import datetime, timezone
 import uuid
 
 app = FastAPI()
+
+# Enable CORS for UI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080", "http://127.0.0.1:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -77,6 +87,22 @@ def run(req: RunRequest):
     
     save_run(run_id, artifact)
     return artifact
+
+
+@app.get("/runs")
+def list_runs():
+    """List all runs."""
+    runs = []
+    for run_file in RUNS_DIR.glob("*.json"):
+        try:
+            with open(run_file) as f:
+                run = json.load(f)
+                runs.append(run)
+        except Exception:
+            continue
+    # Sort by timestamp descending
+    runs.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+    return runs
 
 
 @app.get("/runs/{run_id}")
