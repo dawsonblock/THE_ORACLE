@@ -2,9 +2,9 @@
 
 ## Current State
 
-**Status**: Operational supervised coding scaffold
+**Status**: Operational supervised coding scaffold with portable startup
 
-All acceptance gates now pass.
+All acceptance gates now pass on any system with Python 3.11+.
 
 ## Acceptance Gates
 
@@ -15,7 +15,9 @@ rm -rf .venv
 bash scripts/bootstrap_all.sh
 ```
 
-**Result**: Bootstrap completes successfully with all imports verified.
+**Result**: Bootstrap completes successfully with portable Python detection.
+
+**Portable**: Works with `python3`, `python3.11`, or `PYTHON_BIN=/custom/path`.
 
 ### Gate 2 — Packaging Truth ✅
 
@@ -64,13 +66,13 @@ bash scripts/stop_all.sh
 
 ## What's Proven
 
-- ✅ Python 3.11 control plane
-- ✅ Local bootstrap and service management
-- ✅ Planner loop: task → context → plan → apply → validate → retry
-- ✅ Runtime artifact persistence (runtime/runs/)
-- ✅ Approval/promotion flow with receipts
-- ✅ No-diff protection (no approval without changes)
-- ✅ Multi-service architecture (run server, optional workers)
+- ✅ **Portable Python 3.11+ startup** - Works with any Python installation via `PYTHON_BIN`
+- ✅ **Local bootstrap and service management** - One-command setup
+- ✅ **Planner loop**: task → context → plan → apply → validate → retry
+- ✅ **Runtime artifact persistence** (runtime/runs/)
+- ✅ **Approval/promotion flow with receipts**
+- ✅ **No-diff protection** (no approval without changes)
+- ✅ **Multi-service architecture** (run server, optional workers)
 
 ## What's Not Fully Proven
 
@@ -81,13 +83,27 @@ bash scripts/stop_all.sh
 
 ## Known Limitations
 
-1. **Planner Quality**: Local fallback handles bundled fixtures. API mode requires OPENAI_API_KEY.
+1. **Planner Quality**: Local fallback handles bundled fixtures. API mode requires `OPENAI_API_KEY`.
 2. **Worker Services**: Aider and hardened workers install but may have additional dependencies.
-3. **Benchmarks**: No formal benchmark suite yet (Phase 7 planned).
+3. **Benchmarks**: No formal benchmark suite yet.
+
+## Recent Changes
+
+### Latest: Portable Startup (Phase 1 Complete)
+- Replaced hardcoded `python3.11` with `PYTHON_BIN` environment variable
+- Added Python 3.11+ version validation
+- Bootstrap and run scripts now work on any system with Python 3.11+
+
+### Previous: Full Operational State
+- Fixed preflight service-specific checks
+- Aligned packaging (requirements.txt, pyproject.toml, bootstrap)
+- Achieved 150/150 integration tests
+- Added real approval/promotion E2E tests
+- Updated documentation to match proof
 
 ## Next Steps (Future Phases)
 
-See the full upgrade plan for:
+See full upgrade plan for:
 - Best-of-2/3 planning
 - Attempt history preservation
 - Benchmark fixture set
