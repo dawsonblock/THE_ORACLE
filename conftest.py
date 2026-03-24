@@ -18,6 +18,10 @@ VENDORED_PATHS = [
     ROOT / "third_party" / "cocoindex-code" / "src",
 ]
 
+# Ensure project root is first for proper package discovery (runtime, scripts, integration)
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 for path in reversed(VENDORED_PATHS):
     if path.exists() and str(path) not in sys.path:
         sys.path.insert(0, str(path))

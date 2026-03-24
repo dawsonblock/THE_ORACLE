@@ -25,7 +25,8 @@ start_service() {
   local health_url="${3:-}"
 
   echo "[START] $name"
-  bash -lc "$cmd" > "$ROOT/runtime/${name}.log" 2>&1 &
+  # Run with PYTHONPATH set to include project root for proper imports
+  PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}" bash -lc "$cmd" > "$ROOT/runtime/${name}.log" 2>&1 &
   local pid=$!
   echo "$pid" > "$PID_DIR/${name}.pid"
 
@@ -58,19 +59,20 @@ EOF
 mkdir -p runtime/runs runtime/receipts runtime/logs
 
 if [[ "$(is_enabled run_server.enabled)" == "true" ]]; then
-  start_service "run_server" "$VENV_PYTHON -m scripts.serve_coding_runs" "http://127.0.0.1:8000/health"
+  # Use -c to ensure proper import path handling
+  start_service "run_server" "$VENV_PYTHON -c 'from scripts.serve_coding_runs import main; main()'" "http://127.0.0.1:8000/health"
 fi
 
 if [[ "$(is_enabled retrieval.broker.enabled)" == "true" ]]; then
-  start_service "retrieval_broker" "$VENV_PYTHON -m integration.retrieval_broker.service" "http://127.0.0.1:8010/health"
+  start_service "retrieval_broker" "$VENV_PYTHON -c 'from integration.retrieval_broker.service import main; main()'" "http://127.0.0.1:8010/health"
 fi
 
 if [[ "$(is_enabled workers.hardened.enabled)" == "true" ]]; then
-  start_service "worker_hardened" "$VENV_PYTHON -m integration.worker_hardened.service" "http://127.0.0.1:8020/health"
+  start_service "worker_hardened" "$VENV_PYTHON -c 'from integration.worker_hardened.service import main; main()'" "http://127.0.0.1:8020/health"
 fi
 
 if [[ "$(is_enabled workers.aider.enabled)" == "true" ]]; then
-  start_service "worker_aider" "$VENV_PYTHON -m integration.worker_aider.service" "http://127.0.0.1:8030/health"
+  start_service "worker_aider" "$VENV_PYTHON -c 'from integration.worker_aider.service import main; main()'" "http://127.0.0.1:8030/health"
 fi
 
 echo "RUN_LOCAL_OK"

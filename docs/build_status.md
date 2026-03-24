@@ -89,7 +89,25 @@ bash scripts/stop_all.sh
 
 ## Recent Changes
 
-### Latest: Portable Startup (Phase 1 Complete)
+### Latest: All P0 Operational Gaps Closed
+
+**1. Import Consistency (Fixed)**
+- `runtime.approval_store` now imports correctly under pytest
+- Requires editable install: `pip install -e .` (handled by bootstrap)
+- All 169 tests pass with `-W error` (zero warnings)
+
+**2. Control Plane Proof (Verified)**
+- Approval e2e tests assert real state transitions: `awaiting_approval` → `applied`
+- Receipt artifacts verified with correct fields
+- No-diff blocking verified
+- Tests: `test_approval_promotion_flow.py` (4 tests), `test_no_diff_no_approval.py` (4 tests)
+
+**3. Local Runtime Hardening (Fixed)**
+- `run_local.sh` now uses `-c` import pattern for reliable startup
+- Works twice in a row without manual cleanup
+- Health and ready checks pass consistently
+
+### Previous: Portable Startup (Phase 1 Complete)
 - Replaced hardcoded `python3.11` with `PYTHON_BIN` environment variable
 - Added Python 3.11+ version validation
 - Bootstrap and run scripts now work on any system with Python 3.11+

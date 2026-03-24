@@ -1,12 +1,12 @@
 workers:
   aider:
-    enabled: true
+    enabled: false
   hardened:
-    enabled: true
+    enabled: false
 
 retrieval:
   broker:
-    enabled: true
+    enabled: false
 
 run_server:
   enabled: true

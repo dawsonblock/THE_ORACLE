@@ -44,6 +44,8 @@ cd THE_ORACLE
 bash scripts/bootstrap_all.sh
 ```
 
+The bootstrap installs the package in editable mode (`pip install -e .`) to ensure imports work correctly.
+
 **Using a specific Python interpreter:**
 ```bash
 PYTHON_BIN=/usr/local/bin/python3.11 bash scripts/bootstrap_all.sh

@@ -145,7 +145,8 @@ class TestEmptyValidationStageMetadata:
         )
 
         # Read the promotion receipt
-        receipt = json.loads(open(result.receipt_path).read())
+        with open(result.receipt_path, encoding="utf-8") as f:
+            receipt = json.loads(f.read())
 
         # Verify stage metadata is present
         assert "validation" in receipt, \
