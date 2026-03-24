@@ -1,84 +1,68 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
-# Release Gate Script
-# Runs the full verification matrix to determine if the build is release-ready
-# Usage: bash scripts/release_gate.sh
+echo "═══════════════════════════════════════════════════════════════════"
+echo "RELEASE GATE - Full Verification Suite"
+echo "═══════════════════════════════════════════════════════════════════"
 
-ROOT=$(cd "$(dirname "$0")/.." && pwd)
-cd "$ROOT"
+# Step 0: Clean state
+echo "Step 0: Clean state..."
+rm -rf .venv .pytest_cache runtime/pids runtime/runs runtime/receipts
+mkdir -p runtime/pids runtime/runs runtime/receipts
 
-echo "================================"
-echo "ORACLE Release Gate Verification"
-echo "================================"
-echo ""
-
-# Phase 1: Clean bootstrap
-echo "[1/9] Clean bootstrap..."
-rm -rf .venv
+# Step 1: Bootstrap
+echo "Step 1: Bootstrap..."
 bash scripts/bootstrap_all.sh
-echo ""
 
-# Phase 2: Integration tests
-echo "[2/9] Integration tests..."
-.venv/bin/python -m pytest tests/integration -q
-echo ""
+# Step 2: Import check (via unit tests that verify imports)
+echo "Step 2: Import surface..."
+source .venv/bin/activate
+python -c "
+import aider
+from apps.planner_worker import PlannerWorker
+import integration.pipeline
+import integration.patch_executor
+import integration.llm_planner
+import integration.failure_analyzer
+import integration.runtime.approval_store
+from scripts.serve_coding_runs import main
+print('IMPORTS_OK')
+"
 
-# Phase 3: Unit tests
-echo "[3/9] Unit tests..."
-.venv/bin/python -m pytest tests/unit -q
-echo ""
+# Step 3: Unit tests
+echo "Step 3: Unit tests..."
+pytest -q tests/unit/test_patch_executor.py -W error
+pytest -q tests/unit/test_context_builder.py -W error
+pytest -q tests/unit/test_planner_fallbacks.py -W error
+pytest -q tests/unit/test_failure_analyzer.py -W error
 
-# Phase 4: Full pipeline E2E
-echo "[4/9] Full pipeline E2E..."
-.venv/bin/python -m pytest tests/e2e/test_full_pipeline.py -q
-echo ""
+# Step 4: Integration suite
+echo "Step 4: Integration suite (150 tests)..."
+pytest -q tests/integration -W error
 
-# Phase 5: Approval flow E2E
-echo "[5/9] Approval flow E2E..."
-.venv/bin/python -m pytest tests/e2e/test_approval_promotion_flow.py -q
-echo ""
+# Step 5: Planner loop E2E
+echo "Step 5: Planner loop E2E..."
+pytest -q tests/e2e/test_real_bug_fix.py -W error
+pytest -q tests/e2e/test_full_pipeline.py -W error
 
-# Phase 6: No-diff protection E2E
-echo "[6/9] No-diff protection E2E..."
-.venv/bin/python -m pytest tests/e2e/test_no_diff_no_approval.py -q
-echo ""
+# Step 6: Approval/control-plane
+echo "Step 6: Approval/control-plane..."
+pytest -q tests/e2e/test_approval_promotion_flow.py -W error
+pytest -q tests/e2e/test_no_diff_no_approval.py -W error
+pytest -q tests/e2e/test_unified_approval_gate.py -W error
 
-# Phase 7: Start local runtime
-echo "[7/9] Starting local runtime..."
-bash scripts/run_local.sh > /tmp/release_gate_run.log 2>&1 &
-RUN_PID=$!
-sleep 10
-
-# Phase 8: Health checks
-echo "[8/9] Health checks..."
-HEALTH=$(curl -s http://localhost:8000/health || echo "FAILED")
-if [[ "$HEALTH" != '{"status":"ok"}' ]]; then
-    echo "ERROR: Health check failed: $HEALTH"
-    cat /tmp/release_gate_run.log
-    bash scripts/stop_all.sh || true
-    exit 1
-fi
-READY=$(curl -s http://localhost:8000/ready || echo "FAILED")
-if [[ "$READY" != '{"status":"ready"}' ]]; then
-    echo "ERROR: Ready check failed: $READY"
-    cat /tmp/release_gate_run.log
-    bash scripts/stop_all.sh || true
-    exit 1
-fi
-echo "Health: $HEALTH"
-echo "Ready: $READY"
-echo ""
-
-# Phase 9: Stop services
-echo "[9/9] Stopping services..."
+# Step 7: Server lifecycle
+echo "Step 7: Server lifecycle..."
+lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+sleep 1
+source .venv/bin/activate
+python -c "from scripts.serve_coding_runs import main; main()" > runtime/run_server.log 2>&1 &
+sleep 4
+curl -fsS http://localhost:8000/health > /dev/null
+curl -fsS http://localhost:8000/ready > /dev/null
 bash scripts/stop_all.sh
-wait $RUN_PID 2>/dev/null || true
-echo ""
 
-echo "================================"
-echo "RELEASE GATE PASSED"
-echo "================================"
-echo "All 169 tests passed"
-echo "Local runtime verified"
-echo "Build is release-ready"
+echo ""
+echo "═══════════════════════════════════════════════════════════════════"
+echo "RELEASE GATE PASSED - ALL CHECKS SUCCEEDED"
+echo "══════════════════════════════════════════════════════════════════="

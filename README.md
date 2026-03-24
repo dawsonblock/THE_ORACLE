@@ -4,12 +4,12 @@
 
 [![Status](https://img.shields.io/badge/status-operational%20scaffold-brightgreen)](./docs/build_status.md)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
-[![Tests](https://img.shields.io/badge/tests-169%20passed-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-177%20passed-brightgreen)](./docs/build_status.md)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)]()
 
 A supervised coding scaffold that plans, executes, and validates code modifications through an iterative feedback loop.
 
-**Status**: Operational supervised coding scaffold (169 tests passing, zero warnings) - VERIFIED
+**Status**: Operational supervised coding scaffold (177 tests passing, zero warnings) - VERIFIED
 
 ---
 
@@ -23,8 +23,9 @@ A supervised coding scaffold that plans, executes, and validates code modificati
 | 🔄 **Failure Analysis** | ✅ Operational | Automatic retry with corrected plans |
 | 📊 **Runtime Artifacts** | ✅ Operational | JSON persistence for every run |
 | 🚀 **Local Server** | ✅ Operational | FastAPI with health checks |
-| 🧪 **Test Suite** | ✅ 169 Passed | Unit, E2E, and integration tests (zero warnings) |
+| 🧪 **Test Suite** | ✅ 177 Passed | Unit, E2E, and integration tests (zero warnings) |
 | 🔐 **Approval Flow** | ✅ Operational | Approve/reject with receipts |
+| 🚪 **Unified Gate** | ✅ Operational | Single `/decide` endpoint for approve/reject |
 | 🌐 **Portable Startup** | ✅ Works on any system with Python 3.11+ |
 
 ---
@@ -112,6 +113,14 @@ Response:
 
 ### 5. Approve the Run
 
+Using the unified gate:
+```bash
+curl -X POST http://localhost:8000/runs/{run_id}/decide \
+  -H "Content-Type: application/json" \
+  -d '{"decision": "approved", "actor": "operator", "note": "LGTM"}'
+```
+
+Or the legacy approve endpoint:
 ```bash
 curl -X POST http://localhost:8000/runs/{run_id}/approve \
   -H "Content-Type: application/json" \
@@ -151,18 +160,21 @@ bash scripts/stop_all.sh
 - ✅ **Portable startup** - `PYTHON_BIN` environment variable support
 - ✅ **Local bootstrap and service management** - One-command setup
 - ✅ **Planner loop with validation and retry** - End-to-end pipeline
+- ✅ **Import surface closed** - Editable install only, no PYTHONPATH hacks
 
 ### Control Plane
 - ✅ **Runtime artifact persistence** - Every run saved to `integration/runtime/runs/`
 - ✅ **Approval/promotion flow with receipts** - Full state machine (`awaiting_approval` → `applied`/`rejected`)
+- ✅ **Unified approval/denial gate** - Single validation path for approve/reject
 - ✅ **No-diff protection** - No approval without actual file changes
 - ✅ **Receipt artifacts** - Written to `integration/runtime/receipts/` with full audit trail
+- ✅ **Idempotent startup/shutdown** - Clean lifecycle management
 
 ### Test Coverage
-- ✅ **169 tests passing** with `-W error` (zero warnings)
+- ✅ **177 tests passing** with `-W error` (zero warnings)
 - ✅ **150 integration tests** - Core pipeline, adapters, validation
 - ✅ **10 unit tests** - Context building, patch execution, planning
-- ✅ **9 E2E tests** - Full pipeline, approval flow, no-diff protection
+- ✅ **17 E2E tests** - Full pipeline, approval flow, unified gate, no-diff protection
 
 ---
 
@@ -181,19 +193,20 @@ bash scripts/stop_all.sh
 Run the full test suite:
 
 ```bash
-# All 169 tests with warnings as errors
+# All 177 tests with warnings as errors
 python -W error -m pytest tests/integration tests/unit \
   tests/e2e/test_full_pipeline.py \
   tests/e2e/test_approval_promotion_flow.py \
-  tests/e2e/test_no_diff_no_approval.py -q
+  tests/e2e/test_no_diff_no_approval.py \
+  tests/e2e/test_unified_approval_gate.py -q
 ```
 
 | Suite | Count | Status |
 |-------|-------|--------|
 | Unit | 10 | ✅ Pass |
 | Integration | 150 | ✅ Pass |
-| E2E | 9 | ✅ Pass |
-| **Total** | **169** | **✅ Pass** |
+| E2E | 17 | ✅ Pass |
+| **Total** | **177** | **✅ Pass** |
 
 See [docs/build_status.md](./docs/build_status.md) for full details.
 
@@ -209,9 +222,10 @@ bash scripts/release_gate.sh
 
 This runs the full verification matrix:
 1. Clean bootstrap
-2. 169 tests (integration, unit, E2E)
-3. Local runtime health checks
-4. Clean shutdown
+2. Import surface check
+3. 177 tests (integration, unit, E2E)
+4. Local runtime health checks
+5. Clean shutdown
 
 ---
 
@@ -225,14 +239,14 @@ THE_ORACLE/
 │   ├── stop_all.sh
 │   └── release_gate.sh
 ├── integration/       # Core pipeline modules
-│   ├── pipeline.py           # Main orchestration
-│   ├── patch_executor.py     # Safe file patching
-│   ├── llm_planner.py        # Plan generation
-│   ├── failure_analyzer.py   # Retry logic
-│   └── preflight.py          # Health checks
-├── runtime/           # Artifact storage
-│   ├── runs/          # Run artifacts (JSON)
-│   └── receipts/      # Approval receipts (JSON)
+│   ├── pipeline.py              # Main orchestration
+│   ├── patch_executor.py        # Safe file patching
+│   ├── llm_planner.py           # Plan generation
+│   ├── failure_analyzer.py      # Retry logic
+│   ├── preflight.py             # Health checks
+│   └── runtime/                 # Artifact storage
+│       ├── runs/                # Run artifacts (JSON)
+│       └── receipts/            # Approval receipts (JSON)
 ├── tests/             # Unit, integration, E2E tests
 ├── configs/           # System configuration
 │   └── system.yaml    # Service enable/disable flags
