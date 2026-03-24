@@ -36,16 +36,68 @@ def _local_fallback(task: str, context: List[Dict[str, str]]) -> Optional[Dict[s
                 }
     return None
 
-def create_plan(task: str, context: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
-    api_key = os.getenv("OPENAI_API_KEY")
+def _call_kimi_api(prompt: str) -> Optional[str]:
+    """Call Kimi API (Moonshot AI)."""
+    api_key = os.getenv("KIMI_API_KEY")
     if not api_key:
-        return _local_fallback(task, context)
-
+        return None
+    
     try:
         import requests
     except Exception:
-        return _local_fallback(task, context)
+        return None
+    
+    try:
+        response = requests.post(
+            "https://api.moonshot.cn/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "kimi-k2-0711-preview",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.1,
+            },
+            timeout=60,
+        )
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"Kimi API error: {e}")
+        return None
 
+def _call_openai_api(prompt: str) -> Optional[str]:
+    """Call OpenAI API."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return None
+    
+    try:
+        import requests
+    except Exception:
+        return None
+    
+    try:
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={
+                "model": "gpt-4o-mini",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.1,
+            },
+            timeout=45,
+        )
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"OpenAI API error: {e}")
+        return None
+
+def create_plan(task: str, context: List[Dict[str, str]]) -> Optional[Dict[str, Any]]:
+    """Create a plan using available LLM APIs (Kimi preferred, fallback to OpenAI)."""
+    
     prompt = f"""
 You are a coding agent.
 Task:
@@ -66,20 +118,20 @@ Return ONLY valid JSON:
 }}
 """.strip()
 
-    try:
-        response = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}"},
-            json={
-                "model": "gpt-4o-mini",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.1,
-            },
-            timeout=45,
-        )
-        response.raise_for_status()
-        text = response.json()["choices"][0]["message"]["content"]
-        parsed = _extract_json(text)
-        return parsed if parsed and parsed.get("edits") else _local_fallback(task, context)
-    except Exception:
+    # Try Kimi API first
+    text = _call_kimi_api(prompt)
+    
+    # Fallback to OpenAI if Kimi fails
+    if text is None:
+        text = _call_openai_api(prompt)
+    
+    # Fallback to local if both APIs fail
+    if text is None:
         return _local_fallback(task, context)
+    
+    # Parse the response
+    parsed = _extract_json(text)
+    if parsed and parsed.get("edits"):
+        return parsed
+    
+    return _local_fallback(task, context)

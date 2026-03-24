@@ -5,6 +5,10 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
 from integration.pipeline import run_pipeline
 from integration.runtime.approval_store import (
     load_run,
