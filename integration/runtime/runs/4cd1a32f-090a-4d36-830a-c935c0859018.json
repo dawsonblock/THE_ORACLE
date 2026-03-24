@@ -1,0 +1,14 @@
+{
+  "run_id": "4cd1a32f-090a-4d36-830a-c935c0859018",
+  "task": "fix first_token so empty list returns None",
+  "repo_path": "/private/var/folders/xt/jh84t2kj6hl26tk5qx3m_28h0000gn/T/pytest-of-dawsonblock/pytest-58/test_reject_flow0/repo",
+  "timestamp": "2026-03-24T20:48:28.710608+00:00",
+  "status": "rejected",
+  "attempts": 1,
+  "reason": null,
+  "files_changed": [
+    "parser.py"
+  ],
+  "rejected_at": "2026-03-24T20:48:28.712858+00:00",
+  "rejected_by": "test_operator"
+}

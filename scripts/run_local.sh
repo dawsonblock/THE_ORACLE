@@ -25,8 +25,8 @@ start_service() {
   local health_url="${3:-}"
 
   echo "[START] $name"
-  # Run with PYTHONPATH set to include project root for proper imports
-  PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}" bash -lc "$cmd" > "$ROOT/runtime/${name}.log" 2>&1 &
+  # Run service - imports work via editable install (pip install -e .)
+  bash -lc "$cmd" > "$ROOT/runtime/${name}.log" 2>&1 &
   local pid=$!
   echo "$pid" > "$PID_DIR/${name}.pid"
 
@@ -56,7 +56,7 @@ print("true" if cur else "false")
 EOF
 }
 
-mkdir -p runtime/runs runtime/receipts runtime/logs
+mkdir -p integration/runtime/runs integration/runtime/receipts runtime/logs runtime/pids
 
 if [[ "$(is_enabled run_server.enabled)" == "true" ]]; then
   # Use -c to ensure proper import path handling

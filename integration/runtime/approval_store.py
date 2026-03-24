@@ -7,9 +7,9 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
-ROOT = Path(__file__).resolve().parents[1]
-RUNS_DIR = ROOT / "runtime" / "runs"
-RECEIPTS_DIR = ROOT / "runtime" / "receipts"
+ROOT = Path(__file__).resolve().parents[2]  # project root (from integration/runtime/)
+RUNS_DIR = ROOT / "integration" / "runtime" / "runs"
+RECEIPTS_DIR = ROOT / "integration" / "runtime" / "receipts"
 
 RUNS_DIR.mkdir(parents=True, exist_ok=True)
 RECEIPTS_DIR.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,10 @@
+{
+  "run_id": "04c20da0-eee4-4bc2-b851-8b57e765cf43",
+  "task": "some unrelated task that won't match any fix pattern",
+  "repo_path": "/private/var/folders/xt/jh84t2kj6hl26tk5qx3m_28h0000gn/T/pytest-of-dawsonblock/pytest-68/test_pipeline_failure_no_appro0/repo",
+  "status": "failed",
+  "attempts": 3,
+  "reason": "tests_failed",
+  "files_changed": [],
+  "timestamp": "2026-03-24T21:28:47.734519+00:00"
+}
