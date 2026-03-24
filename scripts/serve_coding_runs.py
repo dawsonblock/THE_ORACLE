@@ -33,6 +33,12 @@ class ApprovalRequest(BaseModel):
     note: str = ""
 
 
+class DecisionRequest(BaseModel):
+    decision: str  # "approved" or "rejected"
+    actor: str = "operator"
+    note: str = ""
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -109,6 +115,45 @@ def get_receipt(run_id: str):
     if receipt is None:
         raise HTTPException(status_code=404, detail="Receipt not found")
     return receipt
+
+
+@app.post("/runs/{run_id}/decide")
+def decide(run_id: str, req: DecisionRequest):
+    """Unified approval/denial gate.
+    
+    This is the single entry point for both approve and reject decisions.
+    Both paths share the same validation logic:
+    1. Run must exist
+    2. Run must be in 'awaiting_approval' state
+    3. Decision must be 'approved' or 'rejected'
+    """
+    # Validate decision value (unified validation)
+    if req.decision not in ("approved", "rejected"):
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid decision: {req.decision}. Must be 'approved' or 'rejected'"
+        )
+    
+    # Run validation (shared by both paths)
+    run = load_run(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+    
+    if run.get("status") != "awaiting_approval":
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Run {run_id} is not in awaiting_approval state (current: {run.get('status')})"
+        )
+    
+    # Execute decision through unified gate
+    try:
+        if req.decision == "approved":
+            result = approve_run(run_id, req.actor, req.note)
+        else:  # rejected
+            result = reject_run(run_id, req.actor, req.note)
+        return result
+    except RuntimeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 def main():

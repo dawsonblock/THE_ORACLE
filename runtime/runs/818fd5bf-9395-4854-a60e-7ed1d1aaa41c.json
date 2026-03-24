@@ -1,0 +1,12 @@
+{
+  "run_id": "818fd5bf-9395-4854-a60e-7ed1d1aaa41c",
+  "task": "fix first_token so empty list returns None",
+  "repo_path": "/private/var/folders/xt/jh84t2kj6hl26tk5qx3m_28h0000gn/T/pytest-of-dawsonblock/pytest-80/test_unified_gate_idempotent_r0/repo",
+  "status": "applied",
+  "attempts": 1,
+  "reason": null,
+  "files_changed": [
+    "parser.py"
+  ],
+  "timestamp": "2026-03-24T21:55:46.638931+00:00"
+}
