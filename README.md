@@ -153,10 +153,10 @@ bash scripts/stop_all.sh
 - ✅ **Planner loop with validation and retry** - End-to-end pipeline
 
 ### Control Plane
-- ✅ **Runtime artifact persistence** - Every run saved to `runtime/runs/`
+- ✅ **Runtime artifact persistence** - Every run saved to `integration/runtime/runs/`
 - ✅ **Approval/promotion flow with receipts** - Full state machine (`awaiting_approval` → `applied`/`rejected`)
 - ✅ **No-diff protection** - No approval without actual file changes
-- ✅ **Receipt artifacts** - Written to `runtime/receipts/` with full audit trail
+- ✅ **Receipt artifacts** - Written to `integration/runtime/receipts/` with full audit trail
 
 ### Test Coverage
 - ✅ **169 tests passing** with `-W error` (zero warnings)

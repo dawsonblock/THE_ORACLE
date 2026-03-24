@@ -69,7 +69,7 @@ bash scripts/stop_all.sh
 - ✅ **Portable Python 3.11+ startup** - Works with any Python installation via `PYTHON_BIN`
 - ✅ **Local bootstrap and service management** - One-command setup
 - ✅ **Planner loop**: task → context → plan → apply → validate → retry
-- ✅ **Runtime artifact persistence** (runtime/runs/)
+- ✅ **Runtime artifact persistence** (integration/runtime/runs/)
 - ✅ **Approval/promotion flow with receipts**
 - ✅ **No-diff protection** (no approval without changes)
 - ✅ **Multi-service architecture** (run server, optional workers)
