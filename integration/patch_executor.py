@@ -1,48 +1,75 @@
+"""
+Patch Executor - Now routes through VerifiedExecutor.
+
+This module is maintained for backward compatibility but now
+delegates all patch execution to oracle_runtime.core.executor.
+"""
 from __future__ import annotations
 import os
 from typing import Dict, List, Any
+import warnings
+
+# Import new execution spine
+from oracle_runtime import get_executor, PatchCommand
+
 
 def apply_plan(plan: Dict[str, Any], repo: str) -> Dict[str, Any]:
+    """
+    Apply a plan to a repository.
+    
+    DEPRECATED: Routes through VerifiedExecutor for single authority.
+    Use oracle_runtime.submit_intent() directly for new code.
+    """
+    warnings.warn(
+        "apply_plan() is deprecated. Use oracle_runtime.submit_intent() instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    
     edits = plan.get("edits")
     if not edits:
         return {"success": False, "reason": "no_edits", "files": []}
+    
+    # Convert old plan format to PatchCommand
+    command = PatchCommand.from_edits(edits, repo_path=repo)
+    
+    # Route through VerifiedExecutor (single authority)
+    executor = get_executor(repo)
+    outcome = executor.execute(command)
+    
+    if outcome.success:
+        return {
+            "success": True,
+            "reason": None,
+            "files": command.files
+        }
+    else:
+        return {
+            "success": False,
+            "reason": outcome.error_message or "execution_failed",
+            "files": []
+        }
 
-    changed_files: List[str] = []
 
-    for edit in edits:
-        rel_path = edit.get("file")
-        search = edit.get("search")
-        replace = edit.get("replace")
-
-        if not rel_path:
-            return {"success": False, "reason": "missing_file", "files": changed_files}
-        if search is None or search == "":
-            return {"success": False, "reason": f"empty_search:{rel_path}", "files": changed_files}
-        if replace is None:
-            return {"success": False, "reason": f"missing_replace:{rel_path}", "files": changed_files}
-
-        abs_path = os.path.join(repo, rel_path)
-        if not os.path.exists(abs_path):
-            return {"success": False, "reason": f"file_not_found:{rel_path}", "files": changed_files}
-
-        try:
-            with open(abs_path, "r", encoding="utf-8") as f:
-                content = f.read()
-        except Exception as e:
-            return {"success": False, "reason": f"read_error:{rel_path}:{e}", "files": changed_files}
-
-        if search not in content:
-            return {"success": False, "reason": f"search_not_found:{rel_path}", "files": changed_files}
-
-        new_content = content.replace(search, replace)
-
-        try:
-            with open(abs_path, "w", encoding="utf-8") as f:
-                f.write(new_content)
-        except Exception as e:
-            return {"success": False, "reason": f"write_error:{rel_path}:{e}", "files": changed_files}
-
-        if rel_path not in changed_files:
-            changed_files.append(rel_path)
-
-    return {"success": True, "reason": None, "files": changed_files}
+# Keep old function for backward compatibility but route through new spine
+def apply_edits(edits: List[Dict[str, str]], repo: str) -> Dict[str, Any]:
+    """
+    Apply edits to files.
+    
+    DEPRECATED: Routes through VerifiedExecutor.
+    """
+    warnings.warn(
+        "apply_edits() is deprecated. Use VerifiedExecutor directly.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    
+    command = PatchCommand.from_edits(edits, repo_path=repo)
+    executor = get_executor(repo)
+    outcome = executor.execute(command)
+    
+    return {
+        "success": outcome.success,
+        "error": outcome.error_message,
+        "files": command.files
+    }

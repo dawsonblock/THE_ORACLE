@@ -17,8 +17,9 @@ from oracle_runtime.core.command.patch_command import PatchCommand, ExecutionOut
 from oracle_runtime.core.executor.verified_executor import VerifiedExecutor, get_executor
 from oracle_runtime.core.executor.world_observer import WorldObserver
 from oracle_runtime.core.commit.coordinator import CommitCoordinator, create_in_memory_coordinator
-from oracle_runtime.core.events.envelope import Event
+from oracle_runtime.core.events.envelope import Event, EventEnvelope
 from oracle_runtime.core.events.event_store import EventStore
+from oracle_runtime.core.approval.approval_service import ApprovalService, get_approval_service
 
 
 @dataclass
@@ -113,14 +114,15 @@ class IntentAPI:
         self,
         executor: Optional[VerifiedExecutor] = None,
         coordinator: Optional[CommitCoordinator] = None,
+        approval_service: Optional[ApprovalService] = None,
         planner = None,  # Will be injected
         validator = None  # Will be injected
     ):
         self.executor = executor
         self.coordinator = coordinator or CommitCoordinator()
+        self.approval_service = approval_service or get_approval_service()
         self.planner = planner
         self.validator = validator
-        self.pending_approvals: Dict[str, Dict[str, Any]] = {}
     
     def submit_intent(
         self,
@@ -245,85 +247,38 @@ class IntentAPI:
             return None
     
     def _request_approval(self, run_id: str, outcome: ExecutionOutcome) -> str:
-        """Request approval for the outcome."""
-        approval_id = str(uuid.uuid4())
-        
-        self.pending_approvals[approval_id] = {
-            "run_id": run_id,
-            "outcome": outcome,
-            "status": "pending"
-        }
-        
-        # Emit approval requested event
-        approval_event = Event.approval_requested(
-            approval_id,
-            correlation_id=outcome.events[0].get("correlation_id") if outcome.events else None
-        )
-        self.coordinator.commit([approval_event])
-        
-        return approval_id
+        """Request approval for the outcome via ApprovalService."""
+        return self.approval_service.request_approval(run_id, outcome)
     
-    def approve(self, approval_id: str, actor: str = "operator") -> Dict[str, Any]:
-        """Approve a pending execution."""
-        if approval_id not in self.pending_approvals:
-            return {"error": "Approval not found"}
+    def approve(self, approval_id: str, actor: str = "operator", note: str = "") -> Dict[str, Any]:
+        """Approve a pending execution via ApprovalService."""
+        result = self.approval_service.approve(approval_id, actor, note)
         
-        pending = self.pending_approvals[approval_id]
-        outcome = pending["outcome"]
+        # Emit event if successful
+        if result.get("status") == "approved":
+            approved_event = Event.approved(
+                approval_id,
+                actor,
+                correlation_id=None
+            )
+            self.coordinator.commit([approved_event])
         
-        # Emit approved event
-        approved_event = Event.approved(
-            approval_id,
-            actor,
-            correlation_id=outcome.events[0].get("correlation_id") if outcome.events else None
-        )
-        self.coordinator.commit([approved_event])
-        
-        # Commit to git
-        commit_hash = self._commit_to_git(approval_id, actor)
-        
-        # Emit committed event
-        committed_event = Event.committed(
-            commit_hash,
-            correlation_id=outcome.events[0].get("correlation_id") if outcome.events else None
-        )
-        self.coordinator.commit([committed_event])
-        
-        # Update pending
-        pending["status"] = "approved"
-        pending["committed_by"] = actor
-        pending["commit_hash"] = commit_hash
-        
-        return {
-            "status": "approved",
-            "approval_id": approval_id,
-            "commit_hash": commit_hash
-        }
+        return result
     
-    def reject(self, approval_id: str, actor: str = "operator") -> Dict[str, Any]:
-        """Reject a pending execution."""
-        if approval_id not in self.pending_approvals:
-            return {"error": "Approval not found"}
+    def reject(self, approval_id: str, actor: str = "operator", note: str = "") -> Dict[str, Any]:
+        """Reject a pending execution via ApprovalService."""
+        result = self.approval_service.reject(approval_id, actor, note)
         
-        pending = self.pending_approvals[approval_id]
-        outcome = pending["outcome"]
+        # Emit event if successful
+        if result.get("status") == "rejected":
+            rejected_event = Event.rejected(
+                approval_id,
+                actor,
+                correlation_id=None
+            )
+            self.coordinator.commit([rejected_event])
         
-        # Emit rejected event
-        rejected_event = Event.rejected(
-            approval_id,
-            actor,
-            correlation_id=outcome.events[0].get("correlation_id") if outcome.events else None
-        )
-        self.coordinator.commit([rejected_event])
-        
-        # Update pending
-        pending["status"] = "rejected"
-        pending["rejected_by"] = actor
-        
-        return {
-            "status": "rejected",
-            "approval_id": approval_id
-        }
+        return result
     
     def _auto_commit(self, run_id: str, outcome: ExecutionOutcome) -> str:
         """Auto-commit (use with caution)."""
@@ -363,16 +318,8 @@ class IntentAPI:
             return f"error: {str(e)}"
     
     def get_pending_approvals(self) -> List[Dict[str, Any]]:
-        """Get list of pending approvals."""
-        return [
-            {
-                "approval_id": aid,
-                "run_id": data["run_id"],
-                "status": data["status"]
-            }
-            for aid, data in self.pending_approvals.items()
-            if data["status"] == "pending"
-        ]
+        """Get list of pending approvals via ApprovalService."""
+        return self.approval_service.get_pending()
 
 
 # Global API instance
